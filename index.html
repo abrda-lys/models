@@ -39,19 +39,11 @@
             padding: 10px;
             border-radius: 10px;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            aspect-ratio: 1; /* Сохраняет пропорции ячеек */
-            height: 0;
-            padding-top: 100%; /* Высота равна ширине, чтобы сохранить квадратную пропорцию */
         }
 
         model-viewer {
             width: 100%;
-            height: 100%; /* Устанавливаем высоту в 100% от контейнера */
-            object-fit: contain; /* Сохраняет пропорции модели */
+            height: 200px;
             cursor: pointer;
         }
 
@@ -60,30 +52,13 @@
             color: black;
             font-weight: bold;
         }
-
-        /* Для мобильных устройств (адаптивность) */
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr 1fr; /* 2 колонки для экранов меньше 768px */
-            }
-
-            .project {
-                padding: 15px;
-                aspect-ratio: auto; /* Убираем фиксированное соотношение сторон на мобильных */
-                padding-top: 0;
-            }
-
-            model-viewer {
-                height: 150px;  /* уменьшенная высота для мобильных */
-            }
-        }
     </style>
     <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
     <script>
         async function loadModels() {
             try {
                 const response = await fetch('https://storage.yandexcloud.net/mymodels/models.txt', { mode: 'cors' });
-                if (!response.ok) throw new Error(`Ошибка HTTP: ${response.status}`);
+                if (!response.ok) throw new Error(Ошибка HTTP: ${response.status});
 
                 const text = await response.text();
                 const lines = text.split('\n').filter(line => line.trim() !== '');
@@ -97,12 +72,12 @@
                     if (name && url) {
                         const projectDiv = document.createElement('div');
                         projectDiv.className = 'project';
-                        projectDiv.innerHTML = `
+                        projectDiv.innerHTML = 
                             <a href="viewer.html?model=${encodeURIComponent(url)}">
                                 <model-viewer src="${url}" ar auto-rotate camera-controls crossOrigin="anonymous"></model-viewer>
                                 <p>${name}</p>
                             </a>
-                        `;
+                        ;
                         grid.appendChild(projectDiv);
                     }
                 });
