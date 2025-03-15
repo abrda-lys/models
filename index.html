@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проекты</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 60%;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .project {
+            text-align: center;
+            background: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        model-viewer {
+            width: 100%;
+            height: 200px;
+            cursor: pointer;
+        }
+
+        .project a {
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+        }
+    </style>
+    <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
+    <script>
+        function expandModel(element) {
+            console.log("Открытие модели:", element.src);
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
+            } else if (element.webkitRequestFullscreen) {
+                element.webkitRequestFullscreen();
+            } else if (element.msRequestFullscreen) {
+                element.msRequestFullscreen();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll("model-viewer").forEach(model => {
+                console.log("Попытка загрузки модели:", model.src);
+                model.addEventListener("error", () => {
+                    console.error("Ошибка загрузки модели:", model.src);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Проекты</h1>
+        <div class="grid">
+            <div class="project">
+                <a href="project1.html">
+                    <model-viewer src="model1.glb" ar auto-rotate camera-controls crossOrigin="anonymous"></model-viewer>
+                    <p>Проект 1</p>
+                </a>
+            </div>
+            <div class="project">
+                <a href="project2.html">
+                    <model-viewer src="model2.glb" ar auto-rotate camera-controls onclick="expandModel(this)" crossOrigin="anonymous"></model-viewer>
+                    <p>Проект 2</p>
+                </a>
+            </div>
+            <div class="project">
+                <a href="project3.html">
+                    <model-viewer src="model3.glb" ar auto-rotate camera-controls onclick="expandModel(this)" crossOrigin="anonymous"></model-viewer>
+                    <p>Проект 3</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
