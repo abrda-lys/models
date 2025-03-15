@@ -58,7 +58,7 @@
         async function loadModels() {
             try {
                 const response = await fetch('https://storage.yandexcloud.net/mymodels/models.txt', { mode: 'cors' });
-                if (!response.ok) throw new Error(Ошибка HTTP: ${response.status});
+                if (!response.ok) throw new Error(`Ошибка HTTP: ${response.status}`);
 
                 const text = await response.text();
                 const lines = text.split('\n').filter(line => line.trim() !== '');
@@ -72,12 +72,12 @@
                     if (name && url) {
                         const projectDiv = document.createElement('div');
                         projectDiv.className = 'project';
-                        projectDiv.innerHTML = 
+                        projectDiv.innerHTML = `
                             <a href="viewer.html?model=${encodeURIComponent(url)}">
                                 <model-viewer src="${url}" ar auto-rotate camera-controls crossOrigin="anonymous"></model-viewer>
                                 <p>${name}</p>
                             </a>
-                        ;
+                        `;
                         grid.appendChild(projectDiv);
                     }
                 });
