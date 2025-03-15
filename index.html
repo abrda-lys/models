@@ -66,15 +66,15 @@
                 const grid = document.querySelector('.grid');
                 grid.innerHTML = '';
 
-                lines.forEach((line, index) => {
+                lines.forEach((line) => {
                     const [name, url] = line.split(',').map(part => part.trim());
 
                     if (name && url) {
                         const projectDiv = document.createElement('div');
                         projectDiv.className = 'project';
                         projectDiv.innerHTML = `
-                            <a href="project${index + 1}.html">
-                                <model-viewer src="${url}" ar auto-rotate camera-controls onclick="expandModel(this)" crossOrigin="anonymous"></model-viewer>
+                            <a href="viewer.html?model=${encodeURIComponent(url)}">
+                                <model-viewer src="${url}" ar auto-rotate camera-controls crossOrigin="anonymous"></model-viewer>
                                 <p>${name}</p>
                             </a>
                         `;
@@ -83,20 +83,6 @@
                 });
             } catch (error) {
                 console.error("Ошибка загрузки списка моделей:", error);
-            }
-        }
-
-        function expandModel(element) {
-            console.log("Открытие модели:", element.src);
-
-            if (element.requestFullscreen) {
-                element.requestFullscreen();
-            } else if (element.mozRequestFullScreen) {
-                element.mozRequestFullScreen();
-            } else if (element.webkitRequestFullscreen) {
-                element.webkitRequestFullscreen();
-            } else if (element.msRequestFullscreen) {
-                element.msRequestFullscreen();
             }
         }
 
