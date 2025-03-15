@@ -1,3 +1,3 @@
-project1,https://storage.yandexcloud.net/mymodels/model1.glb
-project2,https://drive.google.com/uc?id=1vly22IczGecTmCLCS53QqXl2wo39RlaD
-project3,https://drive.google.com/uc?id=ID_ФАЙЛА_3
+project 1, https://storage.yandexcloud.net/mymodels/model1.glb
+project 2, https://drive.google.com/uc?id=1vly22IczGecTmCLCS53QqXl2wo39RlaD
+project 3, https://drive.google.com/uc?id=ID_ФАЙЛА_3
