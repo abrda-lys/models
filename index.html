@@ -92,7 +92,11 @@
                         projectDiv.className = 'project';
                         projectDiv.innerHTML = `
                             <a href="viewer.html?model=${encodeURIComponent(url)}">
-                                <model-viewer src="${url}" ar auto-rotate camera-controls crossOrigin="anonymous"></model-viewer>
+                                <model-viewer src="${url}" 
+                                auto-rotate 
+                                camera-controls 
+                                crossOrigin="anonymous">
+                                </model-viewer>
                                 <p>${name}</p>
                             </a>
                         `;
