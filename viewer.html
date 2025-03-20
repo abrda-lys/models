@@ -25,6 +25,10 @@
              border-radius: 10px;
              box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
          }
+
+              model-viewer::part(internal-gesture-tooltip) {
+            display: none;
+        }
  
          .controls {
              margin-top: 20px;
@@ -60,7 +64,6 @@
  <body>
      <model-viewer id="modelViewer" 
          poster="https://storage.yandexcloud.net/mymodels/label_1.png"
-         reveal="manual"
          ar 
          ar-modes="webxr scene-viewer quick-look"
          auto-rotate 
