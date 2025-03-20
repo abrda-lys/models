@@ -24,6 +24,8 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            touch-action: none; /* Отключает стандартные жесты */
+            -webkit-touch-callout: none; /* Отключает контекстное меню на iPhone */
         }
 
         .controls {
@@ -40,18 +42,6 @@
             background: #007BFF;
             color: white;
             border-radius: 5px;
-        }
-
-        a {
-            margin-top: 20px;
-            text-decoration: none;
-            font-size: 18px;
-            color: black;
-            text-transform: uppercase;
-        }
-
-        a::before {
-            content: "\2190 "; /* Стрелка влево */
         }
     </style>
     <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
@@ -70,8 +60,6 @@
         <button onclick="setView('front')">Вид спереди</button>
         <button onclick="setView('side')">Вид сбоку</button>
     </div>
-    
-    <a href="index.html">НАЗАД</a>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
