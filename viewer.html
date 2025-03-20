@@ -26,6 +26,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
             touch-action: none; /* Отключает стандартные жесты */
             -webkit-touch-callout: none; /* Отключает контекстное меню на iPhone */
+            pointer-events: auto; /* Разрешает взаимодействие с моделью */
         }
 
         .controls {
@@ -52,7 +53,8 @@
         ar 
         ar-modes="scene-viewer quick-look"
         camera-controls
-        disable-tap>
+        disable-tap
+        disable-zoom>
     </model-viewer>
 
     <div class="controls">
