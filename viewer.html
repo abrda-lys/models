@@ -26,6 +26,22 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
 
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background: #007BFF;
+            color: white;
+            border-radius: 5px;
+        }
+
         a {
             margin-top: 20px;
             text-decoration: none;
@@ -35,7 +51,7 @@
         }
 
         a::before {
-            content: "← "; /* Стрелка влево */
+            content: "\2190 "; /* Стрелка влево */
         }
     </style>
     <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
@@ -47,20 +63,39 @@
         ar-modes="webxr scene-viewer quick-look"
         auto-rotate 
         camera-controls>
-        </model-viewer>
+    </model-viewer>
+
+    <div class="controls">
+        <button onclick="setView('top')">Вид сверху</button>
+        <button onclick="setView('front')">Вид спереди</button>
+        <button onclick="setView('side')">Вид сбоку</button>
+    </div>
+    
     <a href="index.html">НАЗАД</a>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const params = new URLSearchParams(window.location.search);
             const modelUrl = params.get("model");
-
+            
             if (modelUrl) {
                 document.getElementById("modelViewer").src = modelUrl;
             } else {
                 alert("Ошибка: URL модели не указан!");
             }
         });
+
+        function setView(view) {
+            const modelViewer = document.getElementById("modelViewer");
+            
+            if (view === "top") {
+                modelViewer.cameraOrbit = "90deg 0deg auto";
+            } else if (view === "front") {
+                modelViewer.cameraOrbit = "0deg 90deg auto";
+            } else if (view === "side") {
+                modelViewer.cameraOrbit = "90deg 90deg auto";
+            }
+        }
     </script>
 </body>
 </html>
