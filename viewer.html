@@ -36,6 +36,8 @@
       border-radius: 8px;
       font-size: 14px;
       color: #333;
+      max-width: 25%; /* Максимальная ширина блока с описанием */
+      text-align: left;
       z-index: 1;
     }
 
@@ -119,7 +121,7 @@
             let descriptionFound = false;
 
             for (const line of lines) {
-              const [desc, url] = line.split(",");
+              const [name, url, desc] = line.split(",");
               if (url && url.trim() === modelUrl) {
                 document.getElementById("modelDescription").textContent = desc.trim() || "Описание модели не найдено.";
                 descriptionFound = true;
