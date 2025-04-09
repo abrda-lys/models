@@ -116,17 +116,24 @@
           .then(response => response.text())
           .then(text => {
             const lines = text.split("\n");
+            let descriptionFound = false;
+
             for (const line of lines) {
               const [desc, url] = line.split(",");
               if (url && url.trim() === modelUrl) {
-                document.getElementById("modelDescription").textContent = desc;
+                document.getElementById("modelDescription").textContent = desc.trim() || "Описание модели не найдено.";
+                descriptionFound = true;
                 break;
               }
+            }
+
+            if (!descriptionFound) {
+              document.getElementById("modelDescription").textContent = "Описание модели не найдено.";
             }
           })
           .catch(err => {
             console.error("Ошибка загрузки описания:", err);
-            document.getElementById("modelDescription").textContent = "Описание недоступно.";
+            document.getElementById("modelDescription").textContent = "Ошибка загрузки описания.";
           });
 
       } else {
