@@ -36,7 +36,7 @@
       border-radius: 8px;
       font-size: 14px;
       color: #333;
-      max-width: 25%; /* Максимальная ширина блока с описанием */
+      max-width: 25%;
       text-align: left;
       z-index: 1;
     }
@@ -53,19 +53,24 @@
       justify-content: center;
     }
 
-    .controls button, .projects-button {
-      padding: 10px;
-      font-size: 20px;
+    .controls button {
+      padding: 15px;
+      font-size: 30px; /* Увеличено на 1,5 раза */
       cursor: pointer;
       border: none;
-      background: #007BFF;
-      color: white;
-      border-radius: 5px;
+      background: transparent; /* Убираем синий фон */
       display: flex;
       align-items: center;
       justify-content: center;
       width: 50px;
       height: 50px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Легкая тень для кнопки */
+    }
+
+    .controls button:hover {
+      background: #007BFF;
+      color: white;
     }
 
     .projects-button {
@@ -76,9 +81,19 @@
       height: auto;
     }
 
-    .projects-button:hover, .controls button:hover {
+    .projects-button:hover {
       background: #0056b3;
     }
+
+    .arrow-button {
+      background: #007BFF;
+      color: white;
+      border-radius: 5px;
+      width: 50px;
+      height: 50px;
+      font-size: 30px;
+    }
+
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
@@ -94,9 +109,9 @@
   </model-viewer>
 
   <div class="controls">
-    <button onclick="rotate(-90)">⬅️</button>
-    <button onclick="setTopView()">⬇️</button>
-    <button onclick="rotate(90)">➡️</button>
+    <button class="arrow-button" onclick="rotate(-90)">⬅️</button>
+    <button class="arrow-button" onclick="setTopView()">⬇️</button>
+    <button class="arrow-button" onclick="rotate(90)">➡️</button>
   </div>
 
   <button class="projects-button" onclick="location.href='index.html'">
