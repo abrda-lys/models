@@ -37,11 +37,7 @@
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Автоматическое заполнение с минимальной шириной блоков */
             gap: 20px; /* Промежутки между блоками */
             padding: 20px 0;
-            height: 100%; /* Блок с моделями тоже будет занимать всю высоту контейнера */
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-content: flex-start; /* Выравнивание блоков по верхнему краю */
+            min-height: 100%; /* Гарантирует, что сетка займет минимум всю высоту контейнера */
         }
 
         .project {
