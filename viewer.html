@@ -123,6 +123,7 @@
             for (const line of lines) {
               const [name, url, desc] = line.split(",");
               if (url && url.trim() === modelUrl) {
+                // Теперь правильно отображаем описание
                 document.getElementById("modelDescription").textContent = desc.trim() || "Описание модели не найдено.";
                 descriptionFound = true;
                 break;
