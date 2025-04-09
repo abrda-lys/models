@@ -53,7 +53,7 @@
 
     .controls button, .projects-button {
       padding: 10px;
-      font-size: 16px;
+      font-size: 20px;
       cursor: pointer;
       border: none;
       background: #007BFF;
@@ -62,17 +62,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    .controls svg, .projects-button svg {
-      width: 20px;
-      height: 20px;
-      fill: white;
+      width: 50px;
+      height: 50px;
     }
 
     .projects-button {
       margin-top: 10px;
-      gap: 8px;
+      padding: 10px 20px;
+      font-size: 16px;
+      width: auto;
+      height: auto;
     }
 
     .projects-button:hover, .controls button:hover {
@@ -93,25 +92,13 @@
   </model-viewer>
 
   <div class="controls">
-    <!-- Влево -->
-    <button onclick="rotate(-90)">
-      <svg viewBox="0 0 24 24"><path d="M15.36 5.64l-1.41 1.41A6.987 6.987 0 0012 6a7 7 0 107 7h-2a5 5 0 11-5-5c1.11 0 2.13.37 2.95 1l-1.59 1.59H19V5.64h-3.64z"/></svg>
-    </button>
-
-    <!-- Вид сверху -->
-    <button onclick="setTopView()">
-      <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-    </button>
-
-    <!-- Вправо -->
-    <button onclick="rotate(90)">
-      <svg viewBox="0 0 24 24"><path d="M8.64 5.64L7.23 7.05A6.987 6.987 0 0112 6a7 7 0 117 7h-2a5 5 0 10-5-5c1.11 0 2.13.37 2.95 1l-1.59 1.59H19V5.64h-3.64z"/></svg>
-    </button>
+    <button onclick="rotate(-90)">⬅️</button>
+    <button onclick="setTopView()">⬇️</button>
+    <button onclick="rotate(90)">➡️</button>
   </div>
 
   <button class="projects-button" onclick="location.href='projects.html'">
-    <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm4 0h14v-2H7v2zm0 4h14v-2H7v2zM3 9h2V7H3v2zm0 8h2v-2H3v2z"/></svg>
-    Проекты
+    ПРОЕКТЫ
   </button>
 
   <script>
