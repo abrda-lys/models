@@ -51,6 +51,8 @@
       gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
+      background-color: transparent; /* Контейнер кнопок прозрачный */
+      border: none; /* Убираем границы */
     }
 
     .controls button {
@@ -58,7 +60,7 @@
       font-size: 30px; /* Увеличено на 1,5 раза */
       cursor: pointer;
       border: none;
-      background: transparent; /* Убираем синий фон */
+      background: #0056b3; /* Цвет кнопок как у кнопки "Проекты" */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -66,11 +68,11 @@
       height: 50px;
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Легкая тень для кнопки */
+      color: white; /* Цвет текста белый */
     }
 
     .controls button:hover {
-      background: #007BFF;
-      color: white;
+      background: #004080; /* Темнее при наведении */
     }
 
     .projects-button {
@@ -79,14 +81,17 @@
       font-size: 16px;
       width: auto;
       height: auto;
+      background: #0056b3; /* Цвет кнопки "Проекты" */
+      color: white; /* Белый текст */
+      border-radius: 5px;
     }
 
     .projects-button:hover {
-      background: #0056b3;
+      background: #004080; /* Темнее при наведении */
     }
 
     .arrow-button {
-      background: #007BFF;
+      background: #0056b3; /* Цвет стрелок как у кнопки "Проекты" */
       color: white;
       border-radius: 5px;
       width: 50px;
@@ -136,14 +141,12 @@
             let descriptionFound = false;
 
             for (const line of lines) {
-              // Разделяем строку по первой запятой для получения названия и ссылки
               const parts = line.split(",");
-              
-              // Проверяем, что есть хотя бы 3 части (название, ссылка, описание)
+
               if (parts.length >= 3) {
                 const name = parts[0];
                 const url = parts[1];
-                const description = parts.slice(2).join(","); // Объединяем всё остальное как описание
+                const description = parts.slice(2).join(",");
 
                 if (url.trim() === modelUrl) {
                   document.getElementById("modelDescription").textContent = description.trim() || "Описание модели не найдено.";
