@@ -121,14 +121,20 @@
             let descriptionFound = false;
 
             for (const line of lines) {
-              // Разделяем строку на части, учитывая "двойные запятые" для описания
-              const [name, url, ...descParts] = line.split(",,");
-              if (url && url.trim() === modelUrl) {
-                // Собираем описание из частей
-                const description = descParts.join(",,").trim() || "Описание модели не найдено.";
-                document.getElementById("modelDescription").textContent = description;
-                descriptionFound = true;
-                break;
+              // Разделяем строку по первой запятой для получения названия и ссылки
+              const parts = line.split(",");
+              
+              // Проверяем, что есть хотя бы 3 части (название, ссылка, описание)
+              if (parts.length >= 3) {
+                const name = parts[0];
+                const url = parts[1];
+                const description = parts.slice(2).join(","); // Объединяем всё остальное как описание
+
+                if (url.trim() === modelUrl) {
+                  document.getElementById("modelDescription").textContent = description.trim() || "Описание модели не найдено.";
+                  descriptionFound = true;
+                  break;
+                }
               }
             }
 
