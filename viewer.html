@@ -121,10 +121,12 @@
             let descriptionFound = false;
 
             for (const line of lines) {
-              const [name, url, desc] = line.split(",");
+              // Разделяем строку на части, учитывая "двойные запятые" для описания
+              const [name, url, ...descParts] = line.split(",,");
               if (url && url.trim() === modelUrl) {
-                // Теперь правильно отображаем описание
-                document.getElementById("modelDescription").textContent = desc.trim() || "Описание модели не найдено.";
+                // Собираем описание из частей
+                const description = descParts.join(",,").trim() || "Описание модели не найдено.";
+                document.getElementById("modelDescription").textContent = description;
                 descriptionFound = true;
                 break;
               }
