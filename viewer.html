@@ -112,7 +112,7 @@
         const modelViewer = document.getElementById("modelViewer");
         modelViewer.src = modelUrl;
 
-        fetch("models.txt")
+        fetch("https://storage.yandexcloud.net/mymodels/models.txt")
           .then(response => response.text())
           .then(text => {
             const lines = text.split("\n");
