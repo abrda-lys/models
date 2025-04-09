@@ -48,17 +48,18 @@
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* Выравнивание содержимого по верхнему краю */
-            height: auto; /* Убираем фиксированную высоту */
-            box-sizing: border-box; /* Включение padding и border в размеры */
-            margin: 10px; /* Добавление промежутков со всех сторон */
+            justify-content: center; /* Выравнивание по центру */
+            height: 300px; /* Ограничение высоты для каждого контейнера */
+            box-sizing: border-box;
+            margin: 10px;
+            overflow: hidden; /* Скрывает переполнение */
         }
 
         model-viewer {
             width: 100%;
-            height: 200px;
+            height: 150px; /* Уменьшаем высоту модели */
             cursor: pointer;
-            object-fit: contain; /* Сохраняет пропорции модели */
+            object-fit: contain;
             transition: height 0.3s ease;
         }
 
@@ -71,8 +72,12 @@
         }
 
         @media (max-width: 768px) {
+            .project {
+                height: 250px; /* Уменьшаем высоту контейнера для мобильных устройств */
+            }
+
             model-viewer {
-                height: 150px; /* Меняем размер модели для маленьких экранов */
+                height: 120px; /* Меняем размер модели для маленьких экранов */
             }
         }
     </style>
