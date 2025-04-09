@@ -34,7 +34,7 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* Размещение 3 контейнеров в ряду */
+            grid-template-columns: repeat(3, 1fr); /* Размещение 3 контейнеров в ряду для ПК */
             gap: 20px; /* Промежутки между блоками */
             padding: 20px 0;
         }
@@ -71,6 +71,10 @@
         }
 
         @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr; /* Размещение 1 контейнера в ряду для мобильных устройств */
+            }
+
             .project {
                 height: 300px; /* Уменьшаем высоту контейнера для мобильных устройств */
             }
