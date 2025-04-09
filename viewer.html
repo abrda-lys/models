@@ -1,111 +1,172 @@
 <!DOCTYPE html>
- <html lang="ru">
- <head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <link rel="icon" href="https://storage.yandexcloud.net/mymodels/favicon.ico" type="image/x-icon">
-     <title>Просмотр модели</title>
-     <style>
-         body {
-             margin: 0;
-             padding: 0;
-             display: flex;
-             flex-direction: column;
-             align-items: center;
-             justify-content: center;
-             height: 100vh;
-             background: url('background.jpg') no-repeat center center fixed;
-             background-size: cover;
-         }
- 
-         model-viewer {
-             width: 80%;
-             height: 80vh;
-             background: white;
-             border-radius: 10px;
-             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-         }
- 
-         model-viewer::part(internal-gesture-tooltip) {
-             display: none;
-         }
- 
-         .controls {
-             margin-top: 20px;
-             display: flex;
-             gap: 10px;
-             flex-wrap: wrap; /* Чтобы кнопки не выходили за границы */
-             justify-content: center;
-         }
- 
-         button {
-             padding: 10px 20px;
-             font-size: 16px;
-             cursor: pointer;
-             border: none;
-             background: #007BFF;
-             color: white;
-             border-radius: 5px;
-         }
- 
-         a {
-             padding: 10px 20px;
-             font-size: 16px;
-             cursor: pointer;
-             text-decoration: none;
-             background: #007BFF;
-             color: white;
-             border-radius: 5px;
-             margin-top: 20px;
-         }
- 
-         a:hover {
-             background: #0056b3; /* Цвет фона при наведении */
-         }
-     </style>
-     <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
-     <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
- </head>
- <body>
-     <model-viewer id="modelViewer" 
-         poster="https://storage.yandexcloud.net/mymodels/label_1.png"
-         ar 
-         ar-modes="webxr scene-viewer quick-look"
-         gesture-rotation="none"
-         camera-controls>
-     </model-viewer>
- 
-     <div class="controls">
-         <button onclick="setView('top')">Вид сверху</button>
-         <button onclick="setView('front')">Вид спереди</button>
-         <button onclick="setView('side')">Вид сбоку</button>
-     </div>
- 
-     <a href="index.html">НАЗАД</a>
- 
-     <script>
-         document.addEventListener("DOMContentLoaded", () => {
-             const params = new URLSearchParams(window.location.search);
-             const modelUrl = params.get("model");
- 
-             if (modelUrl) {
-                 document.getElementById("modelViewer").src = modelUrl;
-             } else {
-                 alert("Ошибка: URL модели не указан!");
-             }
-         });
- 
-         function setView(view) {
-             const modelViewer = document.getElementById("modelViewer");
- 
-             if (view === "top") {
-                 modelViewer.cameraOrbit = "90deg 0deg auto";
-             } else if (view === "front") {
-                 modelViewer.cameraOrbit = "0deg 90deg auto";
-             } else if (view === "side") {
-                 modelViewer.cameraOrbit = "90deg 90deg auto";
-             }
-         }
-     </script>
- </body>
- </html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://storage.yandexcloud.net/mymodels/favicon.ico" type="image/x-icon">
+    <title>Просмотр модели</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: url('background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        model-viewer {
+            width: 80%;
+            height: 80vh;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        model-viewer::part(internal-gesture-tooltip) {
+            display: none;
+        }
+
+        .description {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            z-index: 1;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .controls button, .projects-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background: #007BFF;
+            color: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls svg, .projects-button svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+        }
+
+        .projects-button {
+            margin-top: 10px;
+        }
+
+        a {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            background: #007BFF;
+            color: white;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        a:hover, .projects-button:hover, .controls button:hover {
+            background: #0056b3;
+        }
+    </style>
+    <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
+</head>
+<body>
+    <model-viewer id="modelViewer"
+        poster="https://storage.yandexcloud.net/mymodels/label_1.png"
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        gesture-rotation="none"
+        camera-controls>
+        <div class="description" id="modelDescription">Загрузка описания...</div>
+    </model-viewer>
+
+    <div class="controls">
+        <button onclick="rotate(-90)">
+            <svg viewBox="0 0 24 24"><path d="M15.36 5.64l-1.41 1.41A6.987 6.987 0 0012 6a7 7 0 107 7h-2a5 5 0 11-5-5c1.11 0 2.13.37 2.95 1l-1.59 1.59H19V5.64h-3.64z"/></svg>
+            Влево 90°
+        </button>
+        <button onclick="setTopView()">
+            <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm2 2v14h14V5H5z"/></svg>
+            Вид сверху
+        </button>
+        <button onclick="rotate(90)">
+            <svg viewBox="0 0 24 24"><path d="M8.64 5.64L7.23 7.05A6.987 6.987 0 0112 6a7 7 0 117 7h-2a5 5 0 10-5-5c1.11 0 2.13.37 2.95 1l-1.59 1.59H19V5.64h-3.64z"/></svg>
+            Вправо 90°
+        </button>
+    </div>
+
+    <button class="projects-button" onclick="location.href='projects.html'">
+        <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm4 0h14v-2H7v2zm0 4h14v-2H7v2zM3 9h2V7H3v2zm0 8h2v-2H3v2z"/></svg>
+        Проекты
+    </button>
+
+    <a href="index.html">НАЗАД</a>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const modelUrl = params.get("model");
+
+            if (modelUrl) {
+                const modelViewer = document.getElementById("modelViewer");
+                modelViewer.src = modelUrl;
+
+                // Загрузка описания из models.txt
+                fetch("models.txt")
+                    .then(response => response.text())
+                    .then(text => {
+                        const lines = text.split("\n");
+                        for (const line of lines) {
+                            const [desc, url] = line.split(",");
+                            if (url && url.trim() === modelUrl) {
+                                document.getElementById("modelDescription").textContent = desc;
+                                break;
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Ошибка загрузки описания:", err);
+                        document.getElementById("modelDescription").textContent = "Описание недоступно.";
+                    });
+
+            } else {
+                alert("Ошибка: URL модели не указан!");
+            }
+        });
+
+        function rotate(degrees) {
+            const modelViewer = document.getElementById("modelViewer");
+            const orbit = modelViewer.getCameraOrbit();
+            const azimuth = orbit.azimuth + THREE.MathUtils.degToRad(degrees);
+            modelViewer.cameraOrbit = `${THREE.MathUtils.radToDeg(azimuth)}deg ${orbit.inclination}deg auto`;
+        }
+
+        function setTopView() {
+            const modelViewer = document.getElementById("modelViewer");
+            modelViewer.cameraOrbit = "90deg 0deg auto";
+        }
+    </script>
+</body>
+</html>
