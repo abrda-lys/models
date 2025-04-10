@@ -27,26 +27,26 @@
       position: relative;
     }
 
-  .description {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 12px 16px;
-    border: 1px solid #999; /* Тонкая рамка */
-    border-radius: 0; /* Прямые углы */
-    font-size: 14px;
-    color: #333;
-    max-width: 25%;
-    text-align: left;
-    z-index: 1;
-    box-sizing: border-box;
-  }
+    .description {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 12px 16px;
+      border: 1px solid #999;
+      border-radius: 0;
+      font-size: 14px;
+      color: #333;
+      max-width: 25%;
+      text-align: left;
+      z-index: 1;
+      box-sizing: border-box;
+    }
 
-  .description strong {
-    display: block;
-    margin-bottom: 6px;
-  }
+    .description strong {
+      display: block;
+      margin-bottom: 6px;
+    }
 
     model-viewer::part(internal-gesture-tooltip) {
       display: none;
@@ -58,28 +58,27 @@
       gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
-      background-color: transparent; /* Контейнер кнопок прозрачный */
-      border: none; /* Убираем границы */
+      background-color: transparent;
+      border: none;
     }
 
     .controls button {
       padding: 15px;
-      font-size: 30px; /* Увеличено на 1,5 раза */
+      font-size: 30px;
       cursor: pointer;
       border: none;
-      background: white; /* Цвет кнопок как у кнопки "Проекты" */
+      background: white;
       display: flex;
       align-items: center;
       justify-content: center;
       width: 50px;
       height: 50px;
       border-radius: 5px;
-      ; /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) Легкая тень для кнопки */
-      color: white; /* Цвет текста белый */
+      color: white;
     }
 
     .controls button:hover {
-      background: white; /* Темнее при наведении */
+      background: white;
     }
 
     .projects-button {
@@ -88,24 +87,23 @@
       font-size: 16px;
       width: auto;
       height: auto;
-      background: #c0c0c0; /* Цвет кнопки "Проекты" */
-      color: black; /* Белый текст */
+      background: #c0c0c0;
+      color: black;
       border-radius: 5px;
     }
 
     .projects-button:hover {
-      background: #808080; /* Темнее при наведении */
+      background: #808080;
     }
 
     .arrow-button {
-      background: black; /* Цвет стрелок как у кнопки "Проекты" */
+      background: black;
       color: white;
       border-radius: 5px;
       width: 50px;
       height: 50px;
       font-size: 30px;
     }
-
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
@@ -117,7 +115,12 @@
     ar-modes="webxr scene-viewer quick-look"
     gesture-rotation="none"
     camera-controls>
-    <div class="description" id="modelDescription">Загрузка описания...</div>
+    
+    <div class="description">
+      <strong>Комментарий:</strong>
+      <span id="descriptionText">Загрузка описания...</span>
+    </div>
+    
   </model-viewer>
 
   <div class="controls">
@@ -125,11 +128,6 @@
     <button class="arrow-button" onclick="setTopView()">⬇️</button>
     <button class="arrow-button" onclick="rotate(90)">➡️</button>
   </div>
-
-  <div class="description" id="modelDescription">
-  <strong>Комментарий:</strong>
-  <span id="descriptionText">Загрузка описания...</span>
-</div>
 
   <button class="projects-button" onclick="location.href='index.html'">
     ПРОЕКТЫ
@@ -161,7 +159,7 @@
                 const description = parts.slice(2).join(",");
 
                 if (url.trim() === modelUrl) {
-                  document.getElementById("modelDescription").textContent = description.trim() || "Описание модели не найдено.";
+                  document.getElementById("descriptionText").textContent = description.trim() || "Описание модели не найдено.";
                   descriptionFound = true;
                   break;
                 }
@@ -169,12 +167,12 @@
             }
 
             if (!descriptionFound) {
-              document.getElementById("modelDescription").textContent = "Описание модели не найдено.";
+              document.getElementById("descriptionText").textContent = "Описание модели не найдено.";
             }
           })
           .catch(err => {
             console.error("Ошибка загрузки описания:", err);
-            document.getElementById("modelDescription").textContent = "Ошибка загрузки описания.";
+            document.getElementById("descriptionText").textContent = "Ошибка загрузки описания.";
           });
 
       } else {
