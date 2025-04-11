@@ -190,6 +190,26 @@
       const modelViewer = document.getElementById("modelViewer");
       modelViewer.cameraOrbit = "90deg 0deg auto";
     }
+
+    // Обработчик для колесика мыши (зум)
+    let currentDistance = 2.5; // начальное расстояние камеры
+    const minDistance = 1.0; // минимальное расстояние
+    const maxDistance = 5.0; // максимальное расстояние
+
+    const modelViewer = document.getElementById("modelViewer");
+
+    modelViewer.addEventListener("wheel", (event) => {
+      const delta = event.deltaY;
+      if (delta < 0) {
+        currentDistance = Math.max(minDistance, currentDistance - 0.1);
+      } else {
+        currentDistance = Math.min(maxDistance, currentDistance + 0.1);
+      }
+
+      modelViewer.cameraOrbit = `45deg 55deg ${currentDistance}m`;
+      modelViewer.jumpCameraToGoal(); // обновление положения камеры
+      event.preventDefault();
+    });
   </script>
 </body>
 </html>
