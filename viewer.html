@@ -27,26 +27,6 @@
        position: relative;
      }
  
-   .description {
-     position: absolute;
-     top: 10px;
-     left: 10px;
-     background: rgba(255, 255, 255, 0.9);
-     padding: 12px 16px;
-     border: 1px solid #999; /* Тонкая рамка */
-     border-radius: 0; /* Прямые углы */
-     font-size: 14px;
-     color: #333;
-     max-width: 25%;
-     text-align: left;
-     z-index: 1;
-     box-sizing: border-box;
-   }
- 
-   .description strong {
-     display: block;
-     margin-bottom: 6px;
-   }
      .description {
        position: absolute;
        top: 10px;
@@ -78,19 +58,15 @@
        gap: 10px;
        flex-wrap: wrap;
        justify-content: center;
-       background-color: transparent; /* Контейнер кнопок прозрачный */
-       border: none; /* Убираем границы */
        background-color: transparent;
        border: none;
      }
  
      .controls button {
        padding: 15px;
-       font-size: 30px; /* Увеличено на 1,5 раза */
        font-size: 30px;
        cursor: pointer;
        border: none;
-       background: white; /* Цвет кнопок как у кнопки "Проекты" */
        background: white;
        display: flex;
        align-items: center;
@@ -98,13 +74,10 @@
        width: 50px;
        height: 50px;
        border-radius: 5px;
-       ; /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) Легкая тень для кнопки */
-       color: white; /* Цвет текста белый */
        color: white;
      }
  
      .controls button:hover {
-       background: white; /* Темнее при наведении */
        background: white;
      }
  
@@ -114,20 +87,16 @@
        font-size: 16px;
        width: auto;
        height: auto;
-       background: #c0c0c0; /* Цвет кнопки "Проекты" */
-       color: black; /* Белый текст */
        background: #c0c0c0;
        color: black;
        border-radius: 5px;
      }
  
      .projects-button:hover {
-       background: #808080; /* Темнее при наведении */
        background: #808080;
      }
  
      .arrow-button {
-       background: black; /* Цвет стрелок как у кнопки "Проекты" */
        background: black;
        color: white;
        border-radius: 5px;
@@ -135,10 +104,9 @@
        height: 50px;
        font-size: 30px;
      }
- 
    </style>
    <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+ 
  </head>
  <body>
    <model-viewer id="modelViewer"
@@ -147,7 +115,6 @@
      ar-modes="webxr scene-viewer quick-look"
      gesture-rotation="none"
      camera-controls>
-     <div class="description" id="modelDescription">Загрузка описания...</div>
      
      <div class="description">
        <strong>Комментарий:</strong>
@@ -166,136 +133,298 @@
      ПРОЕКТЫ
    </button>
  
-<script>
-  let currentAzimuth = 0;
-  let measurementPoints = [];
-  let line, label;
-  const modelViewer = document.getElementById("modelViewer");
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const params = new URLSearchParams(window.location.search);
-    const modelUrl = params.get("model");
-
-    if (modelUrl) {
-      modelViewer.src = modelUrl;
-
-      fetch("https://storage.yandexcloud.net/mymodels/models.txt")
-        .then(response => response.text())
-        .then(text => {
-          const lines = text.split("\n");
-          let descriptionFound = false;
-
-          for (const line of lines) {
-            const parts = line.split(",");
-
-            if (parts.length >= 3) {
-              const name = parts[0];
-              const url = parts[1];
-              const description = parts.slice(2).join(",");
-
-              if (url.trim() === modelUrl) {
-                document.getElementById("modelDescription").textContent = description.trim() || "Описание модели не найдено.";
-                document.getElementById("descriptionText").textContent = description.trim() || "Описание модели не найдено.";
-                descriptionFound = true;
-                break;
-              }
-            }
-          }
-
-          if (!descriptionFound) {
-            document.getElementById("modelDescription").textContent = "Описание модели не найдено.";
-            document.getElementById("descriptionText").textContent = "Описание модели не найдено.";
-          }
-        })
-        .catch(err => {
-          console.error("Ошибка загрузки описания:", err);
-          document.getElementById("modelDescription").textContent = "Ошибка загрузки описания.";
-          document.getElementById("descriptionText").textContent = "Ошибка загрузки описания.";
-        });
-
-      initMeasurement();
-    } else {
-      alert("Ошибка: URL модели не указан!");
-    }
-  });
-
-  function rotate(degrees) {
-    currentAzimuth = (currentAzimuth + degrees + 360) % 360;
-    modelViewer.cameraOrbit = `${currentAzimuth}deg 90deg auto`;
-  }
-
-  function setTopView() {
-    modelViewer.cameraOrbit = "90deg 0deg auto";
-  }
-
-  function initMeasurement() {
-    modelViewer.addEventListener("click", event => {
-      const rect = modelViewer.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      const hit = modelViewer.positionAndNormalFromPoint(x / rect.width, y / rect.height);
-
-      if (!hit) return;
-
-      measurementPoints.push(hit.position);
-
-      if (measurementPoints.length === 2) {
-        drawMeasurementLine();
-      }
-    });
-  }
-
-  function drawMeasurementLine() {
-    const scene = modelViewer.scene;
-    if (!scene || !window.THREE) return;
-
-    const [p1, p2] = measurementPoints;
-    const v1 = new THREE.Vector3(p1.x, p1.y, p1.z);
-    const v2 = new THREE.Vector3(p2.x, p2.y, p2.z);
-
-    if (line) {
-      scene.remove(line);
-      line.geometry.dispose();
-    }
-
-    const geometry = new THREE.BufferGeometry().setFromPoints([v1, v2]);
-    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
-    line = new THREE.Line(geometry, material);
-    scene.add(line);
-
-    const distance = v1.distanceTo(v2).toFixed(2);
-
-    if (label) {
-      scene.remove(label);
-    }
-
-    const spriteMaterial = new THREE.SpriteMaterial({
-      map: createTextTexture(`${distance} м`),
-      depthTest: false
-    });
-    label = new THREE.Sprite(spriteMaterial);
-    label.position.copy(v1.clone().add(v2).multiplyScalar(0.5));
-    label.scale.set(0.5, 0.25, 1);
-    scene.add(label);
-
-    measurementPoints = [];
-  }
-
-  function createTextTexture(text) {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = 256;
-    canvas.height = 128;
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "black";
-    ctx.font = "28px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 10);
-    const texture = new THREE.CanvasTexture(canvas);
-    return texture;
-  }
-</script>
+   <script>
+     let currentAzimuth = 0;
+ 
+     document.addEventListener("DOMContentLoaded", () => {
+       const params = new URLSearchParams(window.location.search);
+       const modelUrl = params.get("model");
+ 
+       if (modelUrl) {
+         const modelViewer = document.getElementById("modelViewer");
+         modelViewer.src = modelUrl;
+ 
+         fetch("https://storage.yandexcloud.net/mymodels/models.txt")
+           .then(response => response.text())
+           .then(text => {
+             const lines = text.split("\n");
+             let descriptionFound = false;
+ 
+             for (const line of lines) {
+               const parts = line.split(",");
+ 
+               if (parts.length >= 3) {
+                 const name = parts[0];
+                 const url = parts[1];
+                 const description = parts.slice(2).join(",");
+ 
+                 if (url.trim() === modelUrl) {
+                   document.getElementById("descriptionText").textContent = description.trim() || "Описание модели не найдено.";
+                   descriptionFound = true;
+                   break;
+                 }
+               }
+             }
+ 
+             if (!descriptionFound) {
+               document.getElementById("descriptionText").textContent = "Описание модели не найдено.";
+             }
+           })
+           .catch(err => {
+             console.error("Ошибка загрузки описания:", err);
+             document.getElementById("descriptionText").textContent = "Ошибка загрузки описания.";
+           });
+ 
+       } else {
+         alert("Ошибка: URL модели не указан!");
+       }
+     });
+ 
+     function rotate(degrees) {
+       currentAzimuth = (currentAzimuth + degrees + 360) % 360;
+       const modelViewer = document.getElementById("modelViewer");
+       modelViewer.cameraOrbit = ${currentAzimuth}deg 90deg auto;
+     }
+ 
+     function setTopView() {
+       const modelViewer = document.getElementById("modelViewer");
+       modelViewer.cameraOrbit = "90deg 0deg auto";
+     }
+   </script>
  </body>
  </html>
+  <html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" href="https://storage.yandexcloud.net/mymodels/favicon.ico" type="image/x-icon"/>
+    <title>Просмотр модели</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: url('background.jpg') no-repeat center center fixed;
+        background-size: cover;
+      }
+  
+      model-viewer {
+        width: 80%;
+        height: 80vh;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        position: relative;
+      }
+  
+    .description {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 12px 16px;
+      border: 1px solid #999; /* Тонкая рамка */
+      border-radius: 0; /* Прямые углы */
+      font-size: 14px;
+      color: #333;
+      max-width: 25%;
+      text-align: left;
+      z-index: 1;
+      box-sizing: border-box;
+    }
+  
+    .description strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+      .description {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 12px 16px;
+        border: 1px solid #999;
+        border-radius: 0;
+        font-size: 14px;
+        color: #333;
+        max-width: 25%;
+        text-align: left;
+        z-index: 1;
+        box-sizing: border-box;
+      }
+  
+      .description strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+  
+      model-viewer::part(internal-gesture-tooltip) {
+        display: none;
+      }
+  
+      .controls {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        background-color: transparent; /* Контейнер кнопок прозрачный */
+        border: none; /* Убираем границы */
+        background-color: transparent;
+        border: none;
+      }
+  
+      .controls button {
+        padding: 15px;
+        font-size: 30px; /* Увеличено на 1,5 раза */
+        font-size: 30px;
+        cursor: pointer;
+        border: none;
+        background: white; /* Цвет кнопок как у кнопки "Проекты" */
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 5px;
+        ; /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) Легкая тень для кнопки */
+        color: white; /* Цвет текста белый */
+        color: white;
+      }
+  
+      .controls button:hover {
+        background: white; /* Темнее при наведении */
+        background: white;
+      }
+  
+      .projects-button {
+        margin-top: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        width: auto;
+        height: auto;
+        background: #c0c0c0; /* Цвет кнопки "Проекты" */
+        color: black; /* Белый текст */
+        background: #c0c0c0;
+        color: black;
+        border-radius: 5px;
+      }
+  
+      .projects-button:hover {
+        background: #808080; /* Темнее при наведении */
+        background: #808080;
+      }
+  
+      .arrow-button {
+        background: black; /* Цвет стрелок как у кнопки "Проекты" */
+        background: black;
+        color: white;
+        border-radius: 5px;
+        width: 50px;
+        height: 50px;
+        font-size: 30px;
+      }
+  
+    </style>
+    <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  </head>
+  <body>
+    <model-viewer id="modelViewer"
+      poster="https://storage.yandexcloud.net/mymodels/label_1.png"
+      ar
+      ar-modes="webxr scene-viewer quick-look"
+      gesture-rotation="none"
+      camera-controls>
+      <div class="description" id="modelDescription">Загрузка описания...</div>
+      
+      <div class="description">
+        <strong>Комментарий:</strong>
+        <span id="descriptionText">Загрузка описания...</span>
+      </div>
+      
+    </model-viewer>
+  
+    <div class="controls">
+      <button class="arrow-button" onclick="rotate(-90)">⬅️</button>
+      <button class="arrow-button" onclick="setTopView()">⬇️</button>
+      <button class="arrow-button" onclick="rotate(90)">➡️</button>
+    </div>
+  
+    <div class="description" id="modelDescription">
+    <strong>Комментарий:</strong>
+    <span id="descriptionText">Загрузка описания...</span>
+  </div>
+  
+    <button class="projects-button" onclick="location.href='index.html'">
+      ПРОЕКТЫ
+    </button>
+  
+    <script>
+      let currentAzimuth = 0;
+  
+      document.addEventListener("DOMContentLoaded", () => {
+        const params = new URLSearchParams(window.location.search);
+        const modelUrl = params.get("model");
+  
+        if (modelUrl) {
+          const modelViewer = document.getElementById("modelViewer");
+          modelViewer.src = modelUrl;
+  
+          fetch("https://storage.yandexcloud.net/mymodels/models.txt")
+            .then(response => response.text())
+            .then(text => {
+              const lines = text.split("\n");
+              let descriptionFound = false;
+  
+              for (const line of lines) {
+                const parts = line.split(",");
+  
+                if (parts.length >= 3) {
+                  const name = parts[0];
+                  const url = parts[1];
+                  const description = parts.slice(2).join(",");
+  
+                  if (url.trim() === modelUrl) {
+                    document.getElementById("modelDescription").textContent = description.trim() || "Описание модели не найдено.";
+                    document.getElementById("descriptionText").textContent = description.trim() || "Описание модели не найдено.";
+                    descriptionFound = true;
+                    break;
+                  }
+                }
+              }
+  
+              if (!descriptionFound) {
+                document.getElementById("modelDescription").textContent = "Описание модели не найдено.";
+                document.getElementById("descriptionText").textContent = "Описание модели не найдено.";
+              }
+            })
+            .catch(err => {
+              console.error("Ошибка загрузки описания:", err);
+              document.getElementById("modelDescription").textContent = "Ошибка загрузки описания.";
+              document.getElementById("descriptionText").textContent = "Ошибка загрузки описания.";
+            });
+  
+        } else {
+          alert("Ошибка: URL модели не указан!");
+        }
+      });
+  
+      function rotate(degrees) {
+        currentAzimuth = (currentAzimuth + degrees + 360) % 360;
+        const modelViewer = document.getElementById("modelViewer");
+        modelViewer.cameraOrbit = `${currentAzimuth}deg 90deg auto`;
+      }
+  
+      function setTopView() {
+        const modelViewer = document.getElementById("modelViewer");
+        modelViewer.cameraOrbit = "90deg 0deg auto";
+      }
+    </script>
+  </body>
+  </html>
