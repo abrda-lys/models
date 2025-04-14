@@ -141,12 +141,16 @@
    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
  </head>
  <body>
-   <model-viewer id="modelViewer"
-     poster="https://storage.yandexcloud.net/mymodels/label_1.png"
-     ar
-     ar-modes="webxr scene-viewer quick-look"
-     gesture-rotation="none"
-     camera-controls>
+<model-viewer id="modelViewer"
+  poster="https://storage.yandexcloud.net/mymodels/label_1.png"
+  ar
+  ar-modes="webxr scene-viewer quick-look"
+  gesture-rotation="none"
+  camera-controls
+  interaction-prompt="none"
+  exposure="1"
+  shadow-intensity="1"
+  auto-rotate>
      <div class="description" id="modelDescription">Загрузка описания...</div>
      
      <div class="description">
@@ -229,21 +233,25 @@
   }
 
   function initMeasurement() {
-    modelViewer.addEventListener("click", event => {
-      const rect = modelViewer.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+    modelViewer.addEventListener("pointerdown", onPointerDown);
+  }
 
-      const hit = modelViewer.positionAndNormalFromPoint(x / rect.width, y / rect.height);
+  async function onPointerDown(event) {
+    event.preventDefault(); // отменяем смену центра
 
-      if (!hit) return;
+    const rect = modelViewer.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
 
-      measurementPoints.push(hit.position);
+    const hit = await modelViewer.positionAndNormalFromPoint(x / rect.width, y / rect.height);
 
-      if (measurementPoints.length === 2) {
-        drawMeasurementLine();
-      }
-    });
+    if (!hit) return;
+
+    measurementPoints.push(hit.position);
+
+    if (measurementPoints.length === 2) {
+      drawMeasurementLine();
+    }
   }
 
   function drawMeasurementLine() {
@@ -297,5 +305,6 @@
     return texture;
   }
 </script>
+
  </body>
  </html>
