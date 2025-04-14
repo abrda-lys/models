@@ -166,66 +166,136 @@
      ПРОЕКТЫ
    </button>
  
-   <script>
-     let currentAzimuth = 0;
- 
-     document.addEventListener("DOMContentLoaded", () => {
-       const params = new URLSearchParams(window.location.search);
-       const modelUrl = params.get("model");
- 
-       if (modelUrl) {
-         const modelViewer = document.getElementById("modelViewer");
-         modelViewer.src = modelUrl;
- 
-         fetch("https://storage.yandexcloud.net/mymodels/models.txt")
-           .then(response => response.text())
-           .then(text => {
-             const lines = text.split("\n");
-             let descriptionFound = false;
- 
-             for (const line of lines) {
-               const parts = line.split(",");
- 
-               if (parts.length >= 3) {
-                 const name = parts[0];
-                 const url = parts[1];
-                 const description = parts.slice(2).join(",");
- 
-                 if (url.trim() === modelUrl) {
-                   document.getElementById("modelDescription").textContent = description.trim() || "Описание модели не найдено.";
-                   document.getElementById("descriptionText").textContent = description.trim() || "Описание модели не найдено.";
-                   descriptionFound = true;
-                   break;
-                 }
-               }
-             }
- 
-             if (!descriptionFound) {
-               document.getElementById("modelDescription").textContent = "Описание модели не найдено.";
-               document.getElementById("descriptionText").textContent = "Описание модели не найдено.";
-             }
-           })
-           .catch(err => {
-             console.error("Ошибка загрузки описания:", err);
-             document.getElementById("modelDescription").textContent = "Ошибка загрузки описания.";
-             document.getElementById("descriptionText").textContent = "Ошибка загрузки описания.";
-           });
- 
-       } else {
-         alert("Ошибка: URL модели не указан!");
-       }
-     });
- 
-     function rotate(degrees) {
-       currentAzimuth = (currentAzimuth + degrees + 360) % 360;
-       const modelViewer = document.getElementById("modelViewer");
-       modelViewer.cameraOrbit = `${currentAzimuth}deg 90deg auto`;
-     }
- 
-     function setTopView() {
-       const modelViewer = document.getElementById("modelViewer");
-       modelViewer.cameraOrbit = "90deg 0deg auto";
-     }
-   </script>
+<script>
+  let currentAzimuth = 0;
+  let measurementPoints = [];
+  let line, label;
+  const modelViewer = document.getElementById("modelViewer");
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const modelUrl = params.get("model");
+
+    if (modelUrl) {
+      modelViewer.src = modelUrl;
+
+      fetch("https://storage.yandexcloud.net/mymodels/models.txt")
+        .then(response => response.text())
+        .then(text => {
+          const lines = text.split("\n");
+          let descriptionFound = false;
+
+          for (const line of lines) {
+            const parts = line.split(",");
+
+            if (parts.length >= 3) {
+              const name = parts[0];
+              const url = parts[1];
+              const description = parts.slice(2).join(",");
+
+              if (url.trim() === modelUrl) {
+                document.getElementById("modelDescription").textContent = description.trim() || "Описание модели не найдено.";
+                document.getElementById("descriptionText").textContent = description.trim() || "Описание модели не найдено.";
+                descriptionFound = true;
+                break;
+              }
+            }
+          }
+
+          if (!descriptionFound) {
+            document.getElementById("modelDescription").textContent = "Описание модели не найдено.";
+            document.getElementById("descriptionText").textContent = "Описание модели не найдено.";
+          }
+        })
+        .catch(err => {
+          console.error("Ошибка загрузки описания:", err);
+          document.getElementById("modelDescription").textContent = "Ошибка загрузки описания.";
+          document.getElementById("descriptionText").textContent = "Ошибка загрузки описания.";
+        });
+
+      initMeasurement();
+    } else {
+      alert("Ошибка: URL модели не указан!");
+    }
+  });
+
+  function rotate(degrees) {
+    currentAzimuth = (currentAzimuth + degrees + 360) % 360;
+    modelViewer.cameraOrbit = `${currentAzimuth}deg 90deg auto`;
+  }
+
+  function setTopView() {
+    modelViewer.cameraOrbit = "90deg 0deg auto";
+  }
+
+  function initMeasurement() {
+    modelViewer.addEventListener("click", event => {
+      const rect = modelViewer.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      const hit = modelViewer.positionAndNormalFromPoint(x / rect.width, y / rect.height);
+
+      if (!hit) return;
+
+      measurementPoints.push(hit.position);
+
+      if (measurementPoints.length === 2) {
+        drawMeasurementLine();
+      }
+    });
+  }
+
+  function drawMeasurementLine() {
+    const scene = modelViewer.scene;
+    if (!scene || !window.THREE) return;
+
+    const [p1, p2] = measurementPoints;
+    const v1 = new THREE.Vector3(p1.x, p1.y, p1.z);
+    const v2 = new THREE.Vector3(p2.x, p2.y, p2.z);
+
+    if (line) {
+      scene.remove(line);
+      line.geometry.dispose();
+    }
+
+    const geometry = new THREE.BufferGeometry().setFromPoints([v1, v2]);
+    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    line = new THREE.Line(geometry, material);
+    scene.add(line);
+
+    const distance = v1.distanceTo(v2).toFixed(2);
+
+    if (label) {
+      scene.remove(label);
+    }
+
+    const spriteMaterial = new THREE.SpriteMaterial({
+      map: createTextTexture(`${distance} м`),
+      depthTest: false
+    });
+    label = new THREE.Sprite(spriteMaterial);
+    label.position.copy(v1.clone().add(v2).multiplyScalar(0.5));
+    label.scale.set(0.5, 0.25, 1);
+    scene.add(label);
+
+    measurementPoints = [];
+  }
+
+  function createTextTexture(text) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 256;
+    canvas.height = 128;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
+    ctx.font = "28px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 10);
+    const texture = new THREE.CanvasTexture(canvas);
+    return texture;
+  }
+</script>
  </body>
  </html>
