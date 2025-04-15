@@ -1,382 +1,290 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="icon" href="https://storage.yandexcloud.net/mymodels/favicon.ico" type="image/x-icon"/>
-  <title>Просмотр модели с измерениями</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Измерительный инструмент</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
-    /* Основные стили остаются прежними */
     body {
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: url('background.jpg') no-repeat center center fixed;
-      background-size: cover;
       font-family: Arial, sans-serif;
     }
-
+    
     model-viewer {
-      width: 80%;
-      height: 80vh;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      position: relative;
+      width: 100%;
+      height: 100vh;
     }
-
-    /* Добавляем новые стили для измерения */
+    
+    .controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+    
+    button {
+      padding: 10px 15px;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    button.active {
+      background: #4CAF50;
+    }
+    
     .measure-point {
       position: absolute;
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       background: red;
       border-radius: 50%;
       transform: translate(-50%, -50%);
+      pointer-events: none;
       z-index: 10;
-      pointer-events: none;
+      border: 2px solid white;
     }
-
-    .measure-line-3d {
+    
+    .measure-line {
       position: absolute;
-      background: rgba(255, 0, 0, 0.7);
-      transform-origin: 0 0;
-      z-index: 9;
+      height: 2px;
+      background: red;
+      transform-origin: left center;
       pointer-events: none;
+      z-index: 9;
     }
-
+    
     .measure-label {
       position: absolute;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 4px 8px;
-      border-radius: 4px;
+      background: white;
+      padding: 3px 6px;
+      border-radius: 3px;
       font-size: 12px;
-      color: #333;
-      z-index: 11;
       pointer-events: none;
-      border: 1px solid #ccc;
+      z-index: 11;
       transform: translate(-50%, -100%);
+      border: 1px solid #ccc;
     }
-
-    .measure-controls {
+    
+    .scale-panel {
       position: absolute;
       bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.8);
+      left: 20px;
+      background: rgba(255,255,255,0.9);
       padding: 10px;
       border-radius: 5px;
-      display: none;
-      z-index: 20;
+      z-index: 100;
     }
-
-    .scale-input {
-      margin: 10px 0;
-      display: flex;
-      align-items: center;
-    }
-
-    .scale-input label {
-      margin-right: 10px;
-      font-size: 14px;
-    }
-
-    .scale-input input {
-      width: 80px;
-      padding: 5px;
-    }
-
-    /* Остальные стили остаются без изменений */
-    /* ... */
   </style>
-  <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
   <model-viewer id="modelViewer"
-    poster="https://storage.yandexcloud.net/mymodels/label_1.png"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
+    src="your-model.glb"
     camera-controls
-    shadow-intensity="1">
-    <div class="description">
-      <strong>Комментарий:</strong>
-      <span id="descriptionText">Загрузка описания...</span>
-    </div>
+    auto-rotate
+    shadow-intensity="1"
+    exposure="1">
   </model-viewer>
-
+  
   <div class="controls">
-    <button class="arrow-button" onclick="rotate(-90)">⬅️</button>
-    <button class="arrow-button" onclick="setTopView()">⬇️</button>
-    <button class="arrow-button" onclick="rotate(90)">➡️</button>
-    <button class="measure-button" id="measureButton" onclick="toggleMeasureMode()">📏</button>
+    <button id="measureBtn">📏 Измерение</button>
+    <button id="topViewBtn">⬇️ Вид сверху</button>
+    <button id="resetViewBtn">🔄 Сброс</button>
   </div>
-
-  <div class="measure-controls" id="measureControls">
-    <div class="scale-input">
-      <label>Масштаб (мм/ед):</label>
-      <input type="number" id="scaleInput" value="1" min="0.001" step="0.001">
-    </div>
-    <button onclick="clearMeasurements()">Очистить</button>
-    <button onclick="toggleMeasureMode()">Закрыть</button>
+  
+  <div class="scale-panel">
+    <label>Масштаб: 1 единица = </label>
+    <input type="number" id="scaleInput" value="1000" min="1" step="1"> мм
   </div>
-
-  <button class="projects-button" onclick="location.href='index.html'">
-    ПРОЕКТЫ
-  </button>
 
   <script>
-    let currentAzimuth = 0;
     let measureMode = false;
-    let measurementPoints = [];
-    let scaleFactor = 1;
-    let scene = null;
-    let modelViewer = null;
+    let points = [];
+    let scale = 1000; // 1 unit = 1000mm by default
+    let scene, renderer, camera, model;
     let measureElements = [];
-
-    document.addEventListener("DOMContentLoaded", async () => {
-      modelViewer = document.getElementById("modelViewer");
-      
-      // Инициализация Three.js сцены для точных измерений
-      await initThreeJS();
-      
-      // Загрузка модели
-      const params = new URLSearchParams(window.location.search);
-      const modelUrl = params.get("model");
-
-      if (modelUrl) {
-        modelViewer.src = modelUrl;
-
-        // Загрузка описания модели
-        fetch("https://storage.yandexcloud.net/mymodels/models.txt")
-          .then(response => response.text())
-          .then(text => {
-            const lines = text.split("\n");
-            let descriptionFound = false;
-
-            for (const line of lines) {
-              const parts = line.split(",");
-
-              if (parts.length >= 3) {
-                const name = parts[0];
-                const url = parts[1];
-                const description = parts.slice(2).join(",");
-
-                if (url.trim() === modelUrl) {
-                  document.getElementById("descriptionText").textContent = description.trim() || "Описание модели не найдено.";
-                  descriptionFound = true;
-                  break;
-                }
-              }
-            }
-
-            if (!descriptionFound) {
-              document.getElementById("descriptionText").textContent = "Описание модели не найдено.";
-            }
-          })
-          .catch(err => {
-            console.error("Ошибка загрузки описания:", err);
-            document.getElementById("descriptionText").textContent = "Ошибка загрузки описания.";
-          });
-      } else {
-        alert("Ошибка: URL модели не указан!");
-      }
-    });
-
+    
+    // Инициализация Three.js сцены
     async function initThreeJS() {
-      // Получаем Three.js сцену из model-viewer
       await customElements.whenDefined('model-viewer');
-      scene = modelViewer.querySelector('three-scene');
+      const modelViewer = document.querySelector('model-viewer');
+      scene = modelViewer.querySelector('three-scene').scene;
+      renderer = modelViewer.querySelector('three-renderer').renderer;
+      camera = modelViewer.querySelector('three-camera').camera;
       
-      // Обработчик изменения размера
-      window.addEventListener('resize', () => {
-        if (measureMode) updateMeasurementVisuals();
+      // Получаем ссылку на саму модель
+      modelViewer.addEventListener('load', () => {
+        model = scene.children.find(child => child.type === 'Group');
       });
     }
-
-    function rotate(degrees) {
-      currentAzimuth = (currentAzimuth + degrees + 360) % 360;
-      modelViewer.cameraOrbit = `${currentAzimuth}deg 90deg auto`;
-      if (measureMode) updateMeasurementVisuals();
-    }
-
-    function setTopView() {
-      modelViewer.cameraOrbit = "90deg 0deg auto";
-      if (measureMode) updateMeasurementVisuals();
-    }
-
-    function toggleMeasureMode() {
-      measureMode = !measureMode;
-      const measureControls = document.getElementById("measureControls");
-      
-      if (measureMode) {
-        modelViewer.style.cursor = "crosshair";
-        modelViewer.addEventListener("click", handleMeasurementClick);
-        measureControls.style.display = "block";
-        document.getElementById("measureButton").style.backgroundColor = "#4CAF50";
-        
-        // Загружаем сохраненный масштаб или используем по умолчанию
-        const savedScale = localStorage.getItem('modelScale');
-        if (savedScale) {
-          document.getElementById("scaleInput").value = savedScale;
-          scaleFactor = parseFloat(savedScale);
-        }
-      } else {
-        modelViewer.style.cursor = "";
-        modelViewer.removeEventListener("click", handleMeasurementClick);
-        measureControls.style.display = "none";
-        document.getElementById("measureButton").style.backgroundColor = "black";
-      }
-    }
-
-    function handleMeasurementClick(event) {
-      if (!measureMode || !scene) return;
-      
-      // Получаем позицию клика в 3D пространстве
-      const hit = scene.hitTest(event.clientX, event.clientY);
-      if (!hit) return;
-      
-      const point = hit.point;
-      measurementPoints.push(point);
-      
-      // Обновляем визуализацию измерений
-      updateMeasurementVisuals();
-      
-      // Если точек две - вычисляем расстояние
-      if (measurementPoints.length === 2) {
-        calculateDistance();
-      } else if (measurementPoints.length > 2) {
-        // Начинаем новое измерение
-        clearMeasurementVisuals();
-        measurementPoints = [point];
-      }
-    }
-
-    function calculateDistance() {
-      const point1 = measurementPoints[0];
-      const point2 = measurementPoints[1];
-      
-      // Вычисляем расстояние в мировых координатах
-      const dx = point2.x - point1.x;
-      const dy = point2.y - point1.y;
-      const dz = point2.z - point1.z;
-      const worldDistance = Math.sqrt(dx*dx + dy*dy + dz*dz);
-      
-      // Переводим в миллиметры с учетом масштаба
-      const realDistance = worldDistance * scaleFactor;
-      
-      // Создаем подпись с расстоянием
-      createDistanceLabel(point1, point2, realDistance);
-    }
-
-    function updateMeasurementVisuals() {
-      clearMeasurementVisuals();
-      
-      // Отображаем точки
-      measurementPoints.forEach(point => {
-        createMeasurePoint(point);
-      });
-      
-      // Если есть две точки - рисуем линию
-      if (measurementPoints.length === 2) {
-        createMeasureLine(measurementPoints[0], measurementPoints[1]);
-      }
-    }
-
-    function createMeasurePoint(point3d) {
-      const screenPoint = worldToScreen(point3d);
-      if (!screenPoint) return;
-      
-      const pointElement = document.createElement("div");
-      pointElement.className = "measure-point";
-      pointElement.style.left = `${screenPoint.x}px`;
-      pointElement.style.top = `${screenPoint.y}px`;
-      
-      modelViewer.appendChild(pointElement);
-      measureElements.push(pointElement);
-    }
-
-    function createMeasureLine(point1, point2) {
-      const screenPoint1 = worldToScreen(point1);
-      const screenPoint2 = worldToScreen(point2);
-      if (!screenPoint1 || !screenPoint2) return;
-      
-      const dx = screenPoint2.x - screenPoint1.x;
-      const dy = screenPoint2.y - screenPoint1.y;
-      const length = Math.sqrt(dx*dx + dy*dy);
-      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-      
-      const lineElement = document.createElement("div");
-      lineElement.className = "measure-line-3d";
-      lineElement.style.width = `${length}px`;
-      lineElement.style.left = `${screenPoint1.x}px`;
-      lineElement.style.top = `${screenPoint1.y}px`;
-      lineElement.style.transform = `rotate(${angle}deg)`;
-      
-      modelViewer.appendChild(lineElement);
-      measureElements.push(lineElement);
-    }
-
-    function createDistanceLabel(point1, point2, distance) {
-      const midpoint = {
-        x: (point1.x + point2.x) / 2,
-        y: (point1.y + point2.y) / 2,
-        z: (point1.z + point2.z) / 2
-      };
-      
-      const screenPoint = worldToScreen(midpoint);
-      if (!screenPoint) return;
-      
-      const labelElement = document.createElement("div");
-      labelElement.className = "measure-label";
-      labelElement.textContent = `${distance.toFixed(2)} мм`;
-      labelElement.style.left = `${screenPoint.x}px`;
-      labelElement.style.top = `${screenPoint.y}px`;
-      
-      modelViewer.appendChild(labelElement);
-      measureElements.push(labelElement);
-    }
-
-    function worldToScreen(point3d) {
-      if (!scene || !scene.camera) return null;
-      
-      const camera = scene.camera;
-      const width = modelViewer.clientWidth;
-      const height = modelViewer.clientHeight;
-      
-      // Преобразуем мировые координаты в экранные
-      const vector = new THREE.Vector3(point3d.x, point3d.y, point3d.z);
+    
+    // Преобразование координат
+    function worldToScreen(position) {
+      const vector = new THREE.Vector3();
+      vector.set(position.x, position.y, position.z);
       vector.project(camera);
       
-      const x = (vector.x * 0.5 + 0.5) * width;
-      const y = -(vector.y * 0.5 - 0.5) * height;
+      const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
       
       return { x, y };
     }
-
-    function clearMeasurementVisuals() {
+    
+    // Создание точки измерения
+    function createMeasurePoint(position) {
+      const screenPos = worldToScreen(position);
+      const point = document.createElement('div');
+      point.className = 'measure-point';
+      point.style.left = `${screenPos.x}px`;
+      point.style.top = `${screenPos.y}px`;
+      document.body.appendChild(point);
+      measureElements.push(point);
+      return point;
+    }
+    
+    // Создание линии измерения
+    function createMeasureLine(start, end) {
+      const screenStart = worldToScreen(start);
+      const screenEnd = worldToScreen(end);
+      
+      const dx = screenEnd.x - screenStart.x;
+      const dy = screenEnd.y - screenStart.y;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      
+      const line = document.createElement('div');
+      line.className = 'measure-line';
+      line.style.left = `${screenStart.x}px`;
+      line.style.top = `${screenStart.y}px`;
+      line.style.width = `${length}px`;
+      line.style.transform = `rotate(${angle}deg)`;
+      document.body.appendChild(line);
+      measureElements.push(line);
+      
+      // Добавляем подпись с расстоянием
+      const distance = start.distanceTo(end) * scale;
+      const midPoint = new THREE.Vector3(
+        (start.x + end.x) / 2,
+        (start.y + end.y) / 2,
+        (start.z + end.z) / 2
+      );
+      
+      const labelPos = worldToScreen(midPoint);
+      const label = document.createElement('div');
+      label.className = 'measure-label';
+      label.textContent = `${distance.toFixed(1)} мм`;
+      label.style.left = `${labelPos.x}px`;
+      label.style.top = `${labelPos.y}px`;
+      document.body.appendChild(label);
+      measureElements.push(label);
+      
+      return { line, label };
+    }
+    
+    // Очистка измерений
+    function clearMeasurements() {
       measureElements.forEach(el => el.remove());
       measureElements = [];
+      points = [];
     }
-
-    function clearMeasurements() {
-      clearMeasurementVisuals();
-      measurementPoints = [];
-    }
-
-    // Обновляем масштаб при изменении значения
-    document.getElementById("scaleInput").addEventListener("change", function() {
-      scaleFactor = parseFloat(this.value);
-      localStorage.setItem('modelScale', scaleFactor);
-      if (measurementPoints.length === 2) {
-        clearMeasurementVisuals();
-        updateMeasurementVisuals();
-        calculateDistance();
+    
+    // Обработчик клика для измерения
+    function onModelClick(event) {
+      if (!measureMode || !scene || !model) return;
+      
+      // Получаем позицию клика
+      const mouse = new THREE.Vector2(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1
+      );
+      
+      // Ищем пересечение с моделью
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, camera);
+      
+      // Проверяем пересечения со всеми деталями модели
+      const intersects = raycaster.intersectObject(model, true);
+      
+      if (intersects.length > 0) {
+        const point = intersects[0].point;
+        points.push(point.clone());
+        createMeasurePoint(point);
+        
+        if (points.length === 2) {
+          createMeasureLine(points[0], points[1]);
+          points = []; // Сбрасываем точки для нового измерения
+        }
       }
+    }
+    
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initThreeJS();
+      
+      const modelViewer = document.getElementById('modelViewer');
+      const measureBtn = document.getElementById('measureBtn');
+      const topViewBtn = document.getElementById('topViewBtn');
+      const resetViewBtn = document.getElementById('resetViewBtn');
+      const scaleInput = document.getElementById('scaleInput');
+      
+      // Переключение режима измерения
+      measureBtn.addEventListener('click', () => {
+        measureMode = !measureMode;
+        measureBtn.classList.toggle('active', measureMode);
+        
+        if (measureMode) {
+          modelViewer.style.cursor = 'crosshair';
+          modelViewer.addEventListener('click', onModelClick);
+          clearMeasurements();
+        } else {
+          modelViewer.style.cursor = '';
+          modelViewer.removeEventListener('click', onModelClick);
+        }
+      });
+      
+      // Управление видом
+      topViewBtn.addEventListener('click', () => {
+        modelViewer.cameraOrbit = '90deg 90deg auto';
+      });
+      
+      resetViewBtn.addEventListener('click', () => {
+        modelViewer.cameraOrbit = '0deg 75deg 105%';
+      });
+      
+      // Изменение масштаба
+      scaleInput.addEventListener('change', () => {
+        scale = parseFloat(scaleInput.value);
+        clearMeasurements();
+      });
+      
+      // Обновление позиций элементов при движении камеры
+      modelViewer.addEventListener('camera-change', () => {
+        if (measureMode && measureElements.length > 0) {
+          // Временно отключаем измерения
+          const tempPoints = [...points];
+          const tempElements = [...measureElements];
+          clearMeasurements();
+          
+          // Восстанавливаем точки
+          points = tempPoints;
+          points.forEach(p => createMeasurePoint(p));
+          
+          // Восстанавливаем линии (если есть две точки)
+          if (points.length >= 2) {
+            for (let i = 0; i < points.length - 1; i += 2) {
+              createMeasureLine(points[i], points[i+1]);
+            }
+          }
+        }
+      });
     });
   </script>
 </body>
