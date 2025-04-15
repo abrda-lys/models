@@ -184,5 +184,96 @@
       modelViewer.cameraOrbit = "90deg 0deg auto";
     }
   </script>
+  <script>
+  const modelViewer = document.getElementById("modelViewer");
+  let scene, camera, renderer, raycaster;
+  let measurePoints = [];
+  let measureLine = null;
+  let distanceLabel = null;
+
+  // Инициализация сцены
+  modelViewer.addEventListener('load', () => {
+    const three = modelViewer.renderer;
+    scene = three.scene;
+    camera = three.camera;
+    renderer = three.renderer;
+    raycaster = new THREE.Raycaster();
+
+    modelViewer.addEventListener('pointerdown', onPointerDown);
+  });
+
+  function onPointerDown(event) {
+    if (!event.ctrlKey || event.button !== 0) return;
+
+    const mouse = new THREE.Vector2();
+    const rect = modelViewer.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(scene.children, true);
+
+    if (intersects.length > 0) {
+      const point = intersects[0].point.clone();
+      measurePoints.push(point);
+
+      if (measurePoints.length === 2) {
+        drawMeasurement(measurePoints[0], measurePoints[1]);
+        measurePoints = [];
+      }
+    }
+  }
+
+  function drawMeasurement(p1, p2) {
+    // Удаляем старую линию и надпись
+    if (measureLine) {
+      scene.remove(measureLine);
+      measureLine.geometry.dispose();
+      measureLine.material.dispose();
+      measureLine = null;
+    }
+    if (distanceLabel) {
+      document.body.removeChild(distanceLabel);
+      distanceLabel = null;
+    }
+
+    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    const geometry = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+    measureLine = new THREE.Line(geometry, material);
+    scene.add(measureLine);
+
+    const distance = p1.distanceTo(p2).toFixed(2);
+
+    distanceLabel = document.createElement("div");
+    distanceLabel.style.position = "absolute";
+    distanceLabel.style.color = "red";
+    distanceLabel.style.background = "white";
+    distanceLabel.style.padding = "2px 5px";
+    distanceLabel.style.border = "1px solid red";
+    distanceLabel.style.borderRadius = "3px";
+    distanceLabel.style.fontSize = "14px";
+    distanceLabel.innerText = distance + " м";
+    document.body.appendChild(distanceLabel);
+
+    updateLabelPosition(p1, p2);
+
+    renderer.setAnimationLoop(() => {
+      updateLabelPosition(p1, p2);
+    });
+  }
+
+  function updateLabelPosition(p1, p2) {
+    if (!distanceLabel || !camera) return;
+
+    const center = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+    const vector = center.clone().project(camera);
+    const rect = modelViewer.getBoundingClientRect();
+
+    distanceLabel.style.left = (rect.left + (vector.x + 1) / 2 * rect.width) + 'px';
+    distanceLabel.style.top = (rect.top + (-vector.y + 1) / 2 * rect.height) + 'px';
+  }
+</script>
+
 </body>
 </html>
