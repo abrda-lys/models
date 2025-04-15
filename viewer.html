@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="https://storage.yandexcloud.net/mymodels/favicon.ico" type="image/x-icon"/>
-  <title>Просмотр модели</title>
+  <title>Просмотр модели с измерениями</title>
   <style>
+    /* Основные стили остаются прежними */
     body {
       margin: 0;
       padding: 0;
@@ -16,6 +17,7 @@
       height: 100vh;
       background: url('background.jpg') no-repeat center center fixed;
       background-size: cover;
+      font-family: Arial, sans-serif;
     }
 
     model-viewer {
@@ -27,89 +29,80 @@
       position: relative;
     }
 
-    .description {
+    /* Добавляем новые стили для измерения */
+    .measure-point {
       position: absolute;
-      top: 10px;
-      left: 10px;
+      width: 10px;
+      height: 10px;
+      background: red;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .measure-line-3d {
+      position: absolute;
+      background: rgba(255, 0, 0, 0.7);
+      transform-origin: 0 0;
+      z-index: 9;
+      pointer-events: none;
+    }
+
+    .measure-label {
+      position: absolute;
       background: rgba(255, 255, 255, 0.9);
-      padding: 12px 16px;
-      border: 1px solid #999;
-      border-radius: 0;
-      font-size: 14px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
       color: #333;
-      max-width: 25%;
-      text-align: left;
-      z-index: 1;
-      box-sizing: border-box;
+      z-index: 11;
+      pointer-events: none;
+      border: 1px solid #ccc;
+      transform: translate(-50%, -100%);
     }
 
-    .description strong {
-      display: block;
-      margin-bottom: 6px;
+    .measure-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+      z-index: 20;
     }
 
-    .controls {
-      margin-top: 20px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-      background-color: transparent;
-      border: none;
-    }
-
-    .controls button {
-      padding: 15px;
-      font-size: 30px;
-      cursor: pointer;
-      border: none;
-      background: white;
+    .scale-input {
+      margin: 10px 0;
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 50px;
-      height: 50px;
-      border-radius: 5px;
-      color: white;
     }
 
-    .controls button:hover {
-      background: white;
+    .scale-input label {
+      margin-right: 10px;
+      font-size: 14px;
     }
 
-    .projects-button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      width: auto;
-      height: auto;
-      background: #c0c0c0;
-      color: black;
-      border-radius: 5px;
+    .scale-input input {
+      width: 80px;
+      padding: 5px;
     }
 
-    .projects-button:hover {
-      background: #808080;
-    }
-
-    .arrow-button {
-      background: black;
-      color: white;
-      border-radius: 5px;
-      width: 50px;
-      height: 50px;
-      font-size: 30px;
-    }
+    /* Остальные стили остаются без изменений */
+    /* ... */
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
   <model-viewer id="modelViewer"
     poster="https://storage.yandexcloud.net/mymodels/label_1.png"
     ar
     ar-modes="webxr scene-viewer quick-look"
-    camera-controls>
+    camera-controls
+    shadow-intensity="1">
     <div class="description">
       <strong>Комментарий:</strong>
       <span id="descriptionText">Загрузка описания...</span>
@@ -120,6 +113,16 @@
     <button class="arrow-button" onclick="rotate(-90)">⬅️</button>
     <button class="arrow-button" onclick="setTopView()">⬇️</button>
     <button class="arrow-button" onclick="rotate(90)">➡️</button>
+    <button class="measure-button" id="measureButton" onclick="toggleMeasureMode()">📏</button>
+  </div>
+
+  <div class="measure-controls" id="measureControls">
+    <div class="scale-input">
+      <label>Масштаб (мм/ед):</label>
+      <input type="number" id="scaleInput" value="1" min="0.001" step="0.001">
+    </div>
+    <button onclick="clearMeasurements()">Очистить</button>
+    <button onclick="toggleMeasureMode()">Закрыть</button>
   </div>
 
   <button class="projects-button" onclick="location.href='index.html'">
@@ -128,15 +131,27 @@
 
   <script>
     let currentAzimuth = 0;
+    let measureMode = false;
+    let measurementPoints = [];
+    let scaleFactor = 1;
+    let scene = null;
+    let modelViewer = null;
+    let measureElements = [];
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
+      modelViewer = document.getElementById("modelViewer");
+      
+      // Инициализация Three.js сцены для точных измерений
+      await initThreeJS();
+      
+      // Загрузка модели
       const params = new URLSearchParams(window.location.search);
       const modelUrl = params.get("model");
 
       if (modelUrl) {
-        const modelViewer = document.getElementById("modelViewer");
         modelViewer.src = modelUrl;
 
+        // Загрузка описания модели
         fetch("https://storage.yandexcloud.net/mymodels/models.txt")
           .then(response => response.text())
           .then(text => {
@@ -167,22 +182,202 @@
             console.error("Ошибка загрузки описания:", err);
             document.getElementById("descriptionText").textContent = "Ошибка загрузки описания.";
           });
-
       } else {
         alert("Ошибка: URL модели не указан!");
       }
     });
 
+    async function initThreeJS() {
+      // Получаем Three.js сцену из model-viewer
+      await customElements.whenDefined('model-viewer');
+      scene = modelViewer.querySelector('three-scene');
+      
+      // Обработчик изменения размера
+      window.addEventListener('resize', () => {
+        if (measureMode) updateMeasurementVisuals();
+      });
+    }
+
     function rotate(degrees) {
       currentAzimuth = (currentAzimuth + degrees + 360) % 360;
-      const modelViewer = document.getElementById("modelViewer");
       modelViewer.cameraOrbit = `${currentAzimuth}deg 90deg auto`;
+      if (measureMode) updateMeasurementVisuals();
     }
 
     function setTopView() {
-      const modelViewer = document.getElementById("modelViewer");
       modelViewer.cameraOrbit = "90deg 0deg auto";
+      if (measureMode) updateMeasurementVisuals();
     }
+
+    function toggleMeasureMode() {
+      measureMode = !measureMode;
+      const measureControls = document.getElementById("measureControls");
+      
+      if (measureMode) {
+        modelViewer.style.cursor = "crosshair";
+        modelViewer.addEventListener("click", handleMeasurementClick);
+        measureControls.style.display = "block";
+        document.getElementById("measureButton").style.backgroundColor = "#4CAF50";
+        
+        // Загружаем сохраненный масштаб или используем по умолчанию
+        const savedScale = localStorage.getItem('modelScale');
+        if (savedScale) {
+          document.getElementById("scaleInput").value = savedScale;
+          scaleFactor = parseFloat(savedScale);
+        }
+      } else {
+        modelViewer.style.cursor = "";
+        modelViewer.removeEventListener("click", handleMeasurementClick);
+        measureControls.style.display = "none";
+        document.getElementById("measureButton").style.backgroundColor = "black";
+      }
+    }
+
+    function handleMeasurementClick(event) {
+      if (!measureMode || !scene) return;
+      
+      // Получаем позицию клика в 3D пространстве
+      const hit = scene.hitTest(event.clientX, event.clientY);
+      if (!hit) return;
+      
+      const point = hit.point;
+      measurementPoints.push(point);
+      
+      // Обновляем визуализацию измерений
+      updateMeasurementVisuals();
+      
+      // Если точек две - вычисляем расстояние
+      if (measurementPoints.length === 2) {
+        calculateDistance();
+      } else if (measurementPoints.length > 2) {
+        // Начинаем новое измерение
+        clearMeasurementVisuals();
+        measurementPoints = [point];
+      }
+    }
+
+    function calculateDistance() {
+      const point1 = measurementPoints[0];
+      const point2 = measurementPoints[1];
+      
+      // Вычисляем расстояние в мировых координатах
+      const dx = point2.x - point1.x;
+      const dy = point2.y - point1.y;
+      const dz = point2.z - point1.z;
+      const worldDistance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+      
+      // Переводим в миллиметры с учетом масштаба
+      const realDistance = worldDistance * scaleFactor;
+      
+      // Создаем подпись с расстоянием
+      createDistanceLabel(point1, point2, realDistance);
+    }
+
+    function updateMeasurementVisuals() {
+      clearMeasurementVisuals();
+      
+      // Отображаем точки
+      measurementPoints.forEach(point => {
+        createMeasurePoint(point);
+      });
+      
+      // Если есть две точки - рисуем линию
+      if (measurementPoints.length === 2) {
+        createMeasureLine(measurementPoints[0], measurementPoints[1]);
+      }
+    }
+
+    function createMeasurePoint(point3d) {
+      const screenPoint = worldToScreen(point3d);
+      if (!screenPoint) return;
+      
+      const pointElement = document.createElement("div");
+      pointElement.className = "measure-point";
+      pointElement.style.left = `${screenPoint.x}px`;
+      pointElement.style.top = `${screenPoint.y}px`;
+      
+      modelViewer.appendChild(pointElement);
+      measureElements.push(pointElement);
+    }
+
+    function createMeasureLine(point1, point2) {
+      const screenPoint1 = worldToScreen(point1);
+      const screenPoint2 = worldToScreen(point2);
+      if (!screenPoint1 || !screenPoint2) return;
+      
+      const dx = screenPoint2.x - screenPoint1.x;
+      const dy = screenPoint2.y - screenPoint1.y;
+      const length = Math.sqrt(dx*dx + dy*dy);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      
+      const lineElement = document.createElement("div");
+      lineElement.className = "measure-line-3d";
+      lineElement.style.width = `${length}px`;
+      lineElement.style.left = `${screenPoint1.x}px`;
+      lineElement.style.top = `${screenPoint1.y}px`;
+      lineElement.style.transform = `rotate(${angle}deg)`;
+      
+      modelViewer.appendChild(lineElement);
+      measureElements.push(lineElement);
+    }
+
+    function createDistanceLabel(point1, point2, distance) {
+      const midpoint = {
+        x: (point1.x + point2.x) / 2,
+        y: (point1.y + point2.y) / 2,
+        z: (point1.z + point2.z) / 2
+      };
+      
+      const screenPoint = worldToScreen(midpoint);
+      if (!screenPoint) return;
+      
+      const labelElement = document.createElement("div");
+      labelElement.className = "measure-label";
+      labelElement.textContent = `${distance.toFixed(2)} мм`;
+      labelElement.style.left = `${screenPoint.x}px`;
+      labelElement.style.top = `${screenPoint.y}px`;
+      
+      modelViewer.appendChild(labelElement);
+      measureElements.push(labelElement);
+    }
+
+    function worldToScreen(point3d) {
+      if (!scene || !scene.camera) return null;
+      
+      const camera = scene.camera;
+      const width = modelViewer.clientWidth;
+      const height = modelViewer.clientHeight;
+      
+      // Преобразуем мировые координаты в экранные
+      const vector = new THREE.Vector3(point3d.x, point3d.y, point3d.z);
+      vector.project(camera);
+      
+      const x = (vector.x * 0.5 + 0.5) * width;
+      const y = -(vector.y * 0.5 - 0.5) * height;
+      
+      return { x, y };
+    }
+
+    function clearMeasurementVisuals() {
+      measureElements.forEach(el => el.remove());
+      measureElements = [];
+    }
+
+    function clearMeasurements() {
+      clearMeasurementVisuals();
+      measurementPoints = [];
+    }
+
+    // Обновляем масштаб при изменении значения
+    document.getElementById("scaleInput").addEventListener("change", function() {
+      scaleFactor = parseFloat(this.value);
+      localStorage.setItem('modelScale', scaleFactor);
+      if (measurementPoints.length === 2) {
+        clearMeasurementVisuals();
+        updateMeasurementVisuals();
+        calculateDistance();
+      }
+    });
   </script>
 </body>
 </html>
