@@ -1,187 +1,145 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="icon" href="https://storage.yandexcloud.net/mymodels/favicon.ico" type="image/x-icon"/>
-  <title>Просмотр модели</title>
+  <title>3D Viewer с измерением</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: url('background.jpg') no-repeat center center fixed;
-      background-size: cover;
-    }
-
-    model-viewer {
-      width: 80%;
-      height: 80vh;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      position: relative;
-    }
-
-    .description {
+    body { margin: 0; overflow: hidden; }
+    .label {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 12px 16px;
-      border: 1px solid #999;
-      border-radius: 0;
-      font-size: 14px;
-      color: #333;
-      max-width: 25%;
-      text-align: left;
-      z-index: 1;
-      box-sizing: border-box;
-    }
-
-    .description strong {
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    .controls {
-      margin-top: 20px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-      background-color: transparent;
-      border: none;
-    }
-
-    .controls button {
-      padding: 15px;
-      font-size: 30px;
-      cursor: pointer;
-      border: none;
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 50px;
-      height: 50px;
-      border-radius: 5px;
       color: white;
-    }
-
-    .controls button:hover {
-      background: white;
-    }
-
-    .projects-button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      width: auto;
-      height: auto;
-      background: #c0c0c0;
-      color: black;
-      border-radius: 5px;
-    }
-
-    .projects-button:hover {
-      background: #808080;
-    }
-
-    .arrow-button {
-      background: black;
-      color: white;
-      border-radius: 5px;
-      width: 50px;
-      height: 50px;
-      font-size: 30px;
+      background: rgba(0,0,0,0.7);
+      padding: 4px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      display: none;
     }
   </style>
-  <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
 <body>
-  <model-viewer id="modelViewer"
-    poster="https://storage.yandexcloud.net/mymodels/label_1.png"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
-    camera-controls>
-    <div class="description">
-      <strong>Комментарий:</strong>
-      <span id="descriptionText">Загрузка описания...</span>
-    </div>
-  </model-viewer>
+  <div id="distanceLabel" class="label"></div>
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.1/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.1/examples/jsm/controls/OrbitControls.js';
+    import { GLTFLoader } from 'https://unpkg.com/three@0.160.1/examples/jsm/loaders/GLTFLoader.js';
 
-  <div class="controls">
-    <button class="arrow-button" onclick="rotate(-90)">⬅️</button>
-    <button class="arrow-button" onclick="setTopView()">⬇️</button>
-    <button class="arrow-button" onclick="rotate(90)">➡️</button>
-  </div>
+    let scene, camera, renderer, controls, raycaster, mouse;
+    let modelGroup = new THREE.Group();
+    let points = [];
+    let line;
+    const label = document.getElementById('distanceLabel');
 
-  <button class="projects-button" onclick="location.href='index.html'">
-    ПРОЕКТЫ
-  </button>
+    init();
+    loadModelFromURL();
+    animate();
 
-  <script>
-    let currentAzimuth = 0;
+    function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x202020);
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const params = new URLSearchParams(window.location.search);
-      const modelUrl = params.get("model");
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 2, 5);
 
-      if (modelUrl) {
-        const modelViewer = document.getElementById("modelViewer");
-        modelViewer.src = modelUrl;
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
 
-        fetch("https://storage.yandexcloud.net/mymodels/models.txt")
-          .then(response => response.text())
-          .then(text => {
-            const lines = text.split("\n");
-            let descriptionFound = false;
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
 
-            for (const line of lines) {
-              const parts = line.split(",");
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
 
-              if (parts.length >= 3) {
-                const name = parts[0];
-                const url = parts[1];
-                const description = parts.slice(2).join(",");
+      const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+      light.position.set(0, 20, 0);
+      scene.add(light);
 
-                if (url.trim() === modelUrl) {
-                  document.getElementById("descriptionText").textContent = description.trim() || "Описание модели не найдено.";
-                  descriptionFound = true;
-                  break;
-                }
-              }
-            }
+      scene.add(modelGroup);
 
-            if (!descriptionFound) {
-              document.getElementById("descriptionText").textContent = "Описание модели не найдено.";
-            }
-          })
-          .catch(err => {
-            console.error("Ошибка загрузки описания:", err);
-            document.getElementById("descriptionText").textContent = "Ошибка загрузки описания.";
-          });
-
-      } else {
-        alert("Ошибка: URL модели не указан!");
-      }
-    });
-
-    function rotate(degrees) {
-      currentAzimuth = (currentAzimuth + degrees + 360) % 360;
-      const modelViewer = document.getElementById("modelViewer");
-      modelViewer.cameraOrbit = `${currentAzimuth}deg 90deg auto`;
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('click', onClick);
     }
 
-    function setTopView() {
-      const modelViewer = document.getElementById("modelViewer");
-      modelViewer.cameraOrbit = "90deg 0deg auto";
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function loadModelFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const modelURL = urlParams.get('model');
+
+      if (!modelURL) {
+        alert('Model URL not found');
+        return;
+      }
+
+      const loader = new GLTFLoader();
+      loader.load(modelURL, gltf => {
+        modelGroup.add(gltf.scene);
+        centerModel(gltf.scene);
+      }, undefined, error => {
+        console.error('Error loading model:', error);
+      });
+    }
+
+    function centerModel(model) {
+      const box = new THREE.Box3().setFromObject(model);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      model.position.sub(center);
+    }
+
+    function onClick(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(modelGroup.children, true);
+
+      if (intersects.length > 0) {
+        const point = intersects[0].point.clone();
+        points.push(point);
+
+        const sphere = new THREE.Mesh(
+          new THREE.SphereGeometry(0.02),
+          new THREE.MeshBasicMaterial({ color: 0xff0000 })
+        );
+        sphere.position.copy(point);
+        scene.add(sphere);
+
+        if (points.length === 2) {
+          drawLineAndLabel(points[0], points[1]);
+          points = [];
+        }
+      }
+    }
+
+    function drawLineAndLabel(p1, p2) {
+      if (line) scene.remove(line);
+
+      const geometry = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+      const material = new THREE.LineBasicMaterial({ color: 0xffff00 });
+      line = new THREE.Line(geometry, material);
+      scene.add(line);
+
+      const distance = p1.distanceTo(p2);
+      label.textContent = distance.toFixed(2) + ' м';
+      label.style.display = 'block';
+
+      const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+      const screen = mid.clone().project(camera);
+      const x = (screen.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-screen.y * 0.5 + 0.5) * window.innerHeight;
+      label.style.left = `${x}px`;
+      label.style.top = `${y}px`;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
     }
   </script>
 </body>
