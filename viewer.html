@@ -176,7 +176,7 @@
     function rotate(degrees) {
       currentAzimuth = (currentAzimuth + degrees + 360) % 360;
       const modelViewer = document.getElementById("modelViewer");
-      modelViewer.cameraOrbit = ${currentAzimuth}deg 90deg auto;
+      modelViewer.cameraOrbit = `${currentAzimuth}deg 90deg auto`;
     }
 
     function setTopView() {
@@ -184,6 +184,5 @@
       modelViewer.cameraOrbit = "90deg 0deg auto";
     }
   </script>
-
 </body>
 </html>
